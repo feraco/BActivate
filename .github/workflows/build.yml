@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-12
+    steps:
+    - uses: actions/checkout@v3
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - name: Check Environment
+      run: |
+          xcodebuild -version
+          swift --version
+    - uses: actions/cache@v3
+      with:
+        path: CardinalKit-Example/Pods
+        key: ${{ runner.os }}-pods-${{ hashFiles('CardinalKit-Example/Podfile.lock') }}
+    - uses: actions/cache@v3
+      with:
+        path: ~/Library/Caches/org.swift.swiftpm/
+        key: ${{ runner.os }}-spm-${{ hashFiles('CardinalKit-Example/CardinalKit.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+    - name: Build and test
+      run: bundler install && bundle exec fastlane build
